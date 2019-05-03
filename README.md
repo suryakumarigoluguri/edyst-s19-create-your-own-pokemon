@@ -6,6 +6,6 @@ We have to install flask-sqlalchemy as
 $ pip install flask_sqlalchemy
 After that you have to run the app.py before running
 you have to import db and create dbas in python mode
->>> from crud import db
+>>> from app import db
 >>> db.create_all()
 After running the app.py in debug mode you can perform above operations
