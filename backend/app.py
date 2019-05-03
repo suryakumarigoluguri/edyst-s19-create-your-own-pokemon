@@ -9,8 +9,8 @@ db = SQLAlchemy(app)
 
 class Pokemon(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(30), unique=True)
-    sprite = db.Column(db.String(300), unique=True)
+    name = db.Column(db.String, unique=True)
+    sprite = db.Column(db.String, unique=True)
     fg = db.Column(db.String)
     bg = db.Column(db.String)
     desc = db.Column(db.String)
@@ -29,7 +29,11 @@ def not_found(e):
 @app.route("/api/pokemon", methods=["POST"])
 def add_pokemon():
     pk=request.get_json()
+    if len(pk["pokemon"]["name"])>50:
+        return("Name value has exceeded the limit...")
     name = pk["pokemon"]["name"]
+    if len(pk["pokemon"]["sprite"])>300:
+        return("sprite value has exeeded the limit...")
     sprite = pk["pokemon"]["sprite"]
     fg = pk["pokemon"]["cardColours"]["fg"]
     bg = pk["pokemon"]["cardColours"]["bg"]
@@ -37,9 +41,10 @@ def add_pokemon():
     new_pk = Pokemon(name, sprite, fg, bg, desc)
     db.session.add(new_pk)
     db.session.commit()
-    pkdata = Pokemon.query.get(name==name).first()
+    pkdata = Pokemon.query.filter(Pokemon.name==name).first()
     pk = {"pokemon":{"id":pkdata.id,"name":pkdata.name,"sprite":pkdata.sprite,"cardColours":{"fg":pkdata.fg,"bg":pkdata.bg,"desc":pkdata.desc}}}
     return json.dumps(pk)
+
 
 @app.route('/api/pokemon/<int:id>',methods=["GET"])
 def get_pokemon(id):
@@ -48,7 +53,8 @@ def get_pokemon(id):
         pk = {"pokemon":{"id":pkdata.id,"name":pkdata.name,"sprite":pkdata.sprite,"cardColours":{"fg":pkdata.fg,"bg":pkdata.bg,"desc":pkdata.desc}}}
         return json.dumps(pk)
     else:
-        return render_template("404.html"), 404
+        return ("The id is not present in database")
+
 
 @app.route("/api/pokemon/<int:id>", methods=["PATCH"])
 def update_pokemon(id):
@@ -56,14 +62,21 @@ def update_pokemon(id):
     if (pkdata==None):
         return ("ID is not present so we can't update")
     else:
-        add_pokemon()
-    #user = User.query.get(id)
-    #username = request.json['username']
-    #email = request.json['email']
-    #user.email = email
-    #user.username = username
-    #db.session.commit()
-    #return user_schema.jsonify(user)
+        pk=request.get_json()
+        if len(pk["pokemon"]["name"])>50:
+            return("Name value has exceeded the limit...")
+        if len(pk["pokemon"]["sprite"])>300:
+            return("sprite value has exeeded the limit...")
+        pkdata.name = pk["pokemon"]["name"]
+        pkdata.sprite = pk["pokemon"]["sprite"]
+        pkdata.fg = pk["pokemon"]["cardColours"]["fg"]
+        pkdata.bg = pk["pokemon"]["cardColours"]["bg"]
+        pkdata.desc = pk["pokemon"]["cardColours"]["desc"]
+        db.session.commit()
+        pkdata = Pokemon.query.get(id)
+        pk = {"pokemon":{"id":pkdata.id,"name":pkdata.name,"sprite":pkdata.sprite,"cardColours":{"fg":pkdata.fg,"bg":pkdata.bg,"desc":pkdata.desc}}}
+        return json.dumps(pk)
+
 
 @app.route("/api/pokemon/<int:id>", methods=["DELETE"])
 def delete_pokemon(id):
