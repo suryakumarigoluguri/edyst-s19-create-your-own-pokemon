@@ -27,15 +27,16 @@ class Pokemon(db.Model):
 class PokemonSchema(ma.Schema):
     class Meta:
         # Fields to expose
-        fields = ('name', 'sprite','fg','bg','desc')
+        fields = ('id','name', 'sprite','fg','bg','desc')
     
 pokemon_schema=PokemonSchema()
+pokemons_schema=PokemonSchema(many=True)
 
 @app.errorhandler(404)
 def not_found(e):
    return render_template("404.html"), 404
 
-@app.route("/api/pokemon", methods=["POST"])
+@app.route("/api/pokemon/", methods=["POST"])
 def add_pokemon():
     pk=request.get_json()
     if len(pk["pokemon"]["name"])>50:
@@ -54,7 +55,6 @@ def add_pokemon():
     pk = {"pokemon":{"id":pkdata.id,"name":pkdata.name,"sprite":pkdata.sprite,"cardColours":{"fg":pkdata.fg,"bg":pkdata.bg,"desc":pkdata.desc}}}
     return json.dumps(pk)
 
-
 @app.route('/api/pokemon/<int:id>',methods=["GET"])
 def get_pokemon(id):
     pkdata = Pokemon.query.get(id)
@@ -62,14 +62,26 @@ def get_pokemon(id):
         pk = {"pokemon":{"id":pkdata.id,"name":pkdata.name,"sprite":pkdata.sprite,"cardColours":{"fg":pkdata.fg,"bg":pkdata.bg,"desc":pkdata.desc}}}
         return json.dumps(pk)
     else:
-        return ("The id is not present in database")
+        return render_template("404.html"), 404
+
+@app.route('/api/pokemon/',methods=["GET"])
+def get_all_pokemon():
+    all_pks = Pokemon.query.all()
+    if(all_pks==None):
+        return render_template("404.html"), 404
+    result = pokemons_schema.dump(all_pks)
+    re=[]
+    for i in result.data:
+        pk = {"pokemon":{"id":i["id"],"name":i["name"],"sprite":i["sprite"],"cardColours":{"fg":i["fg"],"bg":i["bg"],"desc":i["desc"]}}}
+        re.append(pk)
+    return jsonify(re)
 
 
 @app.route("/api/pokemon/<int:id>", methods=["PATCH"])
 def update_pokemon(id):
     pkdata = Pokemon.query.get(id)
     if (pkdata==None):
-        return ("ID is not present so we can't update")
+        return render_template("404.html"), 404
     else:
         pk=request.get_json()
         if len(pk["pokemon"]["name"])>50:
@@ -91,7 +103,7 @@ def update_pokemon(id):
 def delete_pokemon(id):
     pkdata = Pokemon.query.get(id)
     if (pkdata==None):
-        return ("ID is not present so we can't delete")
+        return render_template("404.html"), 404
     pk = {"pokemon":{"id":pkdata.id,"name":pkdata.name,"sprite":pkdata.sprite,"cardColours":{"fg":pkdata.fg,"bg":pkdata.bg,"desc":pkdata.desc}}}
     db.session.delete(pkdata)
     db.session.commit()
