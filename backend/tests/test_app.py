@@ -30,7 +30,7 @@ class TestsPokemon(unittest.TestCase):
         
         expected_data={ "pokemon": {"id": 1,"name": "bulbasaur","sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png",
                                     "cardColours": {"fg": "#eeeeee","bg": "#3e3e3e","desc": "#111111" }}}
-        actual_data=self.app.post("http://127.0.0.1:8006/api/pokemon", data = json.dumps(pk_data), content_type='application/json')
+        actual_data=self.app.post("http://127.0.0.1:8006/api/pokemon/", data = json.dumps(pk_data), content_type='application/json')
         self.assertEqual(expected_data,json.loads(actual_data.data))
         print("---------Testing of pokemon post is success----------")
 
